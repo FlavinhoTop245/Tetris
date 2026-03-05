@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,15 +10,20 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
     <div class="background-overlay"></div>
     <div class="game-container">
         <header>
             <h1>ANTIGRAVITY <span class="highlight">TETRIS</span></h1>
         </header>
-        
+
         <div class="main-layout">
             <div class="sidebar left">
+                <div class="stat-box hold-box">
+                    <h2>HOLD</h2>
+                    <canvas id="hold" width="140" height="120"></canvas>
+                </div>
                 <div class="stat-box">
                     <h2>SCORE</h2>
                     <p id="score">0</p>
@@ -26,6 +32,7 @@
                     <h2>LINES</h2>
                     <p id="lines">0</p>
                 </div>
+                <button id="settings-btn" class="secondary-btn">AJUSTES</button>
             </div>
 
             <div class="canvas-wrapper">
@@ -47,22 +54,53 @@
             </div>
 
             <div class="sidebar right">
-                <div class="stat-box">
+                <div class="stat-box next-box">
                     <h2>NEXT</h2>
-                    <canvas id="next" width="120" height="120"></canvas>
+                    <canvas id="next" width="140" height="430"></canvas>
                 </div>
-                <div class="controls-guide">
-                    <h3>COMANDOS</h3>
-                    <ul>
-                        <li><span>← →</span> Mover</li>
-                        <li><span>↑</span> Girar</li>
-                        <li><span>↓</span> Cair Rápido</li>
-                        <li><span>Espaço</span> Hard Drop</li>
-                    </ul>
+                <!-- Removido o guia de comandos estático -->
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="overlay hidden">
+            <div class="overlay-content settings-wrapper">
+                <h2>CONTROLES</h2>
+                <div class="keybind-list">
+                    <div class="keybind-item">
+                        <label>Esquerda</label>
+                        <button class="key-config" data-action="moveLeft">SETALEFT</button>
+                    </div>
+                    <div class="keybind-item">
+                        <label>Direita</label>
+                        <button class="key-config" data-action="moveRight">SETARIGHT</button>
+                    </div>
+                    <div class="keybind-item">
+                        <label>Girar Horário</label>
+                        <button class="key-config" data-action="rotateCW">SETA UP</button>
+                    </div>
+                    <div class="keybind-item">
+                        <label>Girar Anti-horário</label>
+                        <button class="key-config" data-action="rotateCCW">Z</button>
+                    </div>
+                    <div class="keybind-item">
+                        <label>Cair Lento</label>
+                        <button class="key-config" data-action="drop">SETADOWN</button>
+                    </div>
+                    <div class="keybind-item">
+                        <label>Hard Drop</label>
+                        <button class="key-config" data-action="hardDrop">SPACE</button>
+                    </div>
+                    <div class="keybind-item">
+                        <label>Segurar Peça</label>
+                        <button class="key-config" data-action="hold">C</button>
+                    </div>
                 </div>
+                <button id="close-settings">VOLTAR</button>
             </div>
         </div>
     </div>
     <script src="game.js"></script>
 </body>
+
 </html>

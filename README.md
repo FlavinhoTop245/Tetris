@@ -9,24 +9,26 @@ Uma releitura fiel do clássico quebra-cabeça de 1984, otimizada para a web mod
 
 O Antigravity Tetris utiliza a lógica clássica de rotação e encaixe de poliminós. O desafio aumenta conforme a velocidade de queda das peças acelera, exigindo raciocínio rápido e precisão.
 
-### Mecânicas Principais:
-- **O Tabuleiro:** Uma matriz de 10x20 blocos.
-- **As Peças (Tetriminos):** 7 formatos distintos (I, J, L, O, S, T, Z), cada um com sua cor característica.
-- **Eliminação:** Sempre que uma linha horizontal de 10 blocos é preenchida, ela é removida e os blocos acima descem uma posição.
-- **Game Over:** Ocorre quando uma nova peça não consegue ser gerada no topo do tabuleiro por falta de espaço.
+### Mecânicas Avançadas:
+- **Peça Fantasma (Ghost Piece):** Visualize onde a peça cairá.
+- **Segurar Peça (Hold):** Guarde uma peça para uso estratégico futuro.
+- **DAS (Delayed Auto Shift):** Segure as setas para mover a peça continuamente.
+- **Lock Delay:** Tempo extra ao tocar o chão para girar ou mover a peça (permite *T-Spins*).
+- **Rotação Dupla:** Teclas dedicadas para girar nos dois sentidos (Horário e Anti-horário).
+- **Velocidade Balanceada:** Progressão de dificuldade suave e controlada.
 
 ## 🛠️ Tecnologias Utilizadas
 
 Para garantir leveza e compatibilidade total com o GitHub Pages:
 - **HTML5:** Estrutura do jogo e elemento `<canvas>`.
 - **CSS3:** Estilização responsiva e efeitos de "Glow" (estética Antigravity).
-- **JavaScript (Vanilla):** Lógica de colisão, rotação e controle de tempo.
+- **JavaScript (Vanilla):** Lógica complexa de colisão, rotação, DAS, persistência local e controle de tempo.
 
 ## 🚀 Como fazer o Deploy via GitHub Desktop
 
 Como você está usando a versão desktop para realizar o commit, siga este passo a passo para colocar o jogo no ar:
 
-1. **Commit Local:** No GitHub Desktop, selecione as alterações, escreva uma mensagem (ex: "feat: implementação da lógica de linhas") e clique em **Commit to main**.
+1. **Commit Local:** No GitHub Desktop, selecione as alterações, escreva uma mensagem (ex: "feat: das, lock delay e rotação dupla") e clique em **Commit to main**.
 2. **Push:** Clique no botão **Push origin** para enviar o código para o servidor do GitHub.
 3. **Ativar o Pages:**
    - Vá até o seu repositório no site do GitHub.
@@ -35,11 +37,15 @@ Como você está usando a versão desktop para realizar o commit, siga este pass
    - Clique em **Save**.
 4. **Acesse:** Em poucos minutos, o link `https://seu-usuario.github.io/seu-repositorio/` estará ativo.
 
-## ⌨️ Comandos de Controle
+## ⌨️ Controles (Padrão)
 
-| Tecla | Ação |
+Acesse o menu **AJUSTES** no jogo para remapear estas teclas:
+
+| Ação | Tecla Padrão |
 | :--- | :--- |
-| **Seta Esquerda / Direita** | Move a peça lateralmente |
-| **Seta Cima** | Rotaciona a peça em 90° |
-| **Seta Baixo** | Soft Drop (Desce mais rápido) |
-| **Espaço** | Hard Drop (Cai instantaneamente) |
+| **Mover lateralmente** | Setas Esquerda / Direira (Segurar para deslizar) |
+| **Girar Horário** | Seta Cima |
+| **Girar Anti-horário** | Z |
+| **Cair Rápido** | Seta Baixo |
+| **Hard Drop** | Espaço |
+| **Segurar Peça** | C |
