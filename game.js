@@ -10,7 +10,8 @@ nextContext.scale(30, 30);
 holdContext.scale(30, 30);
 
 function arenaSweep() {
-    let rowCount = 1;
+    let linesClearedThisTurn = 0;
+
     outer: for (let y = arena.length - 1; y > 0; --y) {
         for (let x = 0; x < arena[y].length; ++x) {
             if (arena[y][x] === 0) {
@@ -20,12 +21,143 @@ function arenaSweep() {
         const row = arena.splice(y, 1)[0].fill(0);
         arena.unshift(row);
         ++y;
-
-        player.score += rowCount * 10;
-        player.lines += 1;
-        rowCount *= 2;
+        linesClearedThisTurn++;
     }
-    updateScore();
+
+    if (linesClearedThisTurn > 0) {
+        if (currentGameMode === 'standard') {
+            calculateStandardScore(linesClearedThisTurn);
+        } else {
+            // Modo 40 linhas: pontuação simples do jogo original ou apenas manter contagem
+            player.score += linesClearedThisTurn * 10;
+        }
+        player.lines += linesClearedThisTurn;
+        updateScore();
+    }
+
+    if (currentGameMode === '40lines' && player.lines >= 40) {
+        victory40Lines();
+    }
+}
+
+function checkTSpin(lines) {
+    // Primeiro verifica se é a peça T e se rotacionou por último
+    const isTPiece = player.matrix.length === 3 && player.matrix[1][1] !== 0 && player.matrix[0][0] === 0;
+    if (!isTPiece || !player.lastActionWasRotate) return { type: "none" };
+
+    const { x, y } = player.pos;
+
+    // Cantos relativos ao centro (1,1) da matriz 3x3
+    const corners = [
+        { x: x + 0, y: y + 0 }, // Top-Left
+        { x: x + 2, y: y + 0 }, // Top-Right
+        { x: x + 0, y: y + 2 }, // Bottom-Left
+        { x: x + 2, y: y + 2 }  // Bottom-Right
+    ];
+
+    let filledCorners = 0;
+    corners.forEach(c => {
+        if (c.y >= 20 || c.x < 0 || c.x >= 10 || arena[c.y][c.x] !== 0) {
+            filledCorners++;
+        }
+    });
+
+    if (filledCorners < 3) return { type: "none" };
+
+    // Regra das 2 pontas (frente) para diferenciar Full de Mini
+    // Depende da orientação
+    let frontCorners = 0;
+    if (player.orientation === 0) { // Topo
+        if (isFilled(x + 0, y + 0)) frontCorners++;
+        if (isFilled(x + 2, y + 0)) frontCorners++;
+    } else if (player.orientation === 1) { // Direita
+        if (isFilled(x + 2, y + 0)) frontCorners++;
+        if (isFilled(x + 2, y + 2)) frontCorners++;
+    } else if (player.orientation === 2) { // Baixo
+        if (isFilled(x + 0, y + 2)) frontCorners++;
+        if (isFilled(x + 2, y + 2)) frontCorners++;
+    } else if (player.orientation === 3) { // Esquerda
+        if (isFilled(x + 0, y + 0)) frontCorners++;
+        if (isFilled(x + 0, y + 2)) frontCorners++;
+    }
+
+    return { type: frontCorners >= 2 ? "full" : "mini" };
+}
+
+function isFilled(x, y) {
+    return y >= 20 || x < 0 || x >= 10 || (arena[y] && arena[y][x] !== 0);
+}
+
+function calculateStandardScore(lines) {
+    let basePoints = 0;
+    let actionName = "";
+
+    // Identificar se é um T-Spin legítimo
+    const tspin = checkTSpin(lines);
+    const isSpin = tspin.type !== "none";
+    const isTetris = lines === 4;
+    const isB2BEligible = isTetris || isSpin;
+
+    // Regras de Pontuação SRS
+    if (tspin.type === "full") {
+        if (lines === 0) { actionName = "T-SPIN"; basePoints = 400; }
+        else if (lines === 1) { actionName = "T-SPIN SINGLE"; basePoints = 800; }
+        else if (lines === 2) { actionName = "T-SPIN DOUBLE"; basePoints = 1200; }
+        else if (lines === 3) { actionName = "T-SPIN TRIPLE"; basePoints = 1600; }
+    } else if (tspin.type === "mini") {
+        actionName = "T-SPIN MINI";
+        basePoints = 200;
+        if (lines > 0) basePoints += lines * 100;
+    } else {
+        // Linhas normais
+        if (lines === 1) { basePoints = 100; actionName = "SINGLE"; }
+        else if (lines === 2) { basePoints = 300; actionName = "DOUBLE"; }
+        else if (lines === 3) { basePoints = 500; actionName = "TRIPLE"; }
+        else if (lines === 4) { basePoints = 800; actionName = "TETRIS"; }
+    }
+
+    // Lógica Back-to-Back (B2B)
+    if (isB2BEligible) {
+        player.b2bCount++;
+        if (player.b2bCount > 1) {
+            basePoints *= player.b2bCount;
+        }
+    } else if (lines > 0) {
+        player.b2bCount = 0; // Quebra a sequência B2B apenas se limpou linha mas não foi tetris/spin
+    }
+
+    // All Clear (Tabuleiro totalmente limpo)
+    const isAllClear = arena.every(row => row.every(value => value === 0));
+    if (isAllClear) {
+        basePoints += 1600;
+        actionName = "ALL CLEAR!";
+    }
+
+    showActionFeedback(actionName, player.b2bCount);
+    player.score += basePoints;
+}
+
+function showActionFeedback(text, b2b) {
+    const actionEl = document.getElementById('action-text');
+    const b2bEl = document.getElementById('b2b-text');
+
+    actionEl.innerText = text;
+    actionEl.classList.remove('action-anim');
+    void actionEl.offsetWidth; // Trigger reflow
+    actionEl.classList.add('action-anim');
+
+    if (b2b > 1) {
+        b2bEl.innerText = `BACK-TO-BACK: ${b2b}X`;
+        b2bEl.classList.add('show');
+    } else {
+        b2bEl.classList.remove('show');
+    }
+
+    // Limpar texto após 2 segundos se não houver novos hits
+    clearTimeout(actionEl.timer);
+    actionEl.timer = setTimeout(() => {
+        actionEl.innerText = "";
+    }, 2000);
 }
 
 function collide(arena, player) {
@@ -198,6 +330,7 @@ function playerDrop() {
     } else {
         player.lockActive = false;
         dropCounter = 0;
+        player.lastActionWasRotate = false;
     }
 }
 
@@ -222,6 +355,7 @@ function playerMove(dir) {
     if (collide(arena, player)) {
         player.pos.x -= dir;
     } else {
+        player.lastActionWasRotate = false;
         if (player.lockActive) player.lockCounter = 0;
     }
 }
@@ -256,6 +390,7 @@ function playerReset() {
     player.matrix = getNextFromQueue();
     player.pos.y = 0;
     player.pos.x = Math.floor(arena[0].length / 2) - Math.floor(player.matrix[0].length / 2);
+    player.orientation = 0;
 
     if (collide(arena, player)) {
         gameOver();
@@ -305,9 +440,83 @@ function playerHold() {
 }
 
 function gameOver() {
-    document.getElementById('final-score').innerText = player.score;
-    document.getElementById('game-over').classList.remove('hidden');
     gameRunning = false;
+    isTimerRunning = false;
+
+    document.getElementById('end-title').innerText = "GAME OVER";
+    document.getElementById('end-label').innerText = "Sua pontuação final:";
+    document.getElementById('final-score').innerText = player.score;
+
+    // Esconder scoreboard no modo padrão
+    document.getElementById('best-times-container').classList.add('hidden');
+
+    document.getElementById('game-over').classList.remove('hidden');
+}
+
+function victory40Lines() {
+    gameRunning = false;
+    isTimerRunning = false;
+    const finalTime = performance.now() - gameStartTime;
+    saveBestTime(finalTime);
+
+    document.getElementById('end-title').innerText = "VITÓRIA!";
+    document.getElementById('end-label').innerText = "Tempo Final:";
+    document.getElementById('final-score').innerText = formatTime(finalTime);
+
+    // Mostrar scoreboard apenas no modo 40 linhas
+    updateBestTimesDisplay();
+
+    document.getElementById('game-over').classList.remove('hidden');
+}
+
+function formatTime(ms) {
+    const totalSeconds = ms / 1000;
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+    const hundredths = Math.floor((ms % 1000) / 10);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}.${hundredths.toString().padStart(2, '0')}`;
+}
+
+function saveBestTime(time) {
+    let bestTimes = JSON.parse(localStorage.getItem('tetris40Times')) || [];
+    bestTimes.push(time);
+    bestTimes.sort((a, b) => a - b);
+    bestTimes = bestTimes.slice(0, 5);
+    localStorage.setItem('tetris40Times', JSON.stringify(bestTimes));
+    updateBestTimesDisplay();
+}
+
+function updateBestTimesDisplay() {
+    const list = document.getElementById('best-times-list');
+    const container = document.getElementById('best-times-container');
+    const bestTimes = JSON.parse(localStorage.getItem('tetris40Times')) || [];
+
+    if (bestTimes.length > 0) {
+        container.classList.remove('hidden');
+        list.innerHTML = bestTimes.map((time, index) =>
+            `<li><span>#${index + 1}</span> <span>${formatTime(time)}</span></li>`
+        ).join('');
+    } else {
+        container.classList.add('hidden');
+    }
+}
+updateBestTimesDisplay();
+
+function showMenu() {
+    gameRunning = false;
+    isTimerRunning = false;
+    document.getElementById('game-over').classList.add('hidden');
+    document.getElementById('start-screen').classList.remove('hidden');
+
+    // Garantir que o timer suma ao voltar para o menu
+    document.querySelector('.timer-box').style.display = 'none';
+    document.getElementById('timer').innerText = "0:00.00";
+
+    // Limpar feedback
+    document.getElementById('action-text').innerText = "";
+    document.getElementById('b2b-text').classList.remove('show');
+
+    resetGameState();
 }
 
 function playerRotate(dir) {
@@ -323,7 +532,9 @@ function playerRotate(dir) {
             return;
         }
     }
+    player.orientation = (player.orientation + (dir > 0 ? 1 : 3)) % 4;
     if (player.lockActive) player.lockCounter = 0;
+    player.lastActionWasRotate = true;
 }
 
 function rotate(matrix, dir) {
@@ -359,6 +570,77 @@ let moveState = {
 const DAS_DELAY = 170;
 const DAS_INTERVAL = 50;
 
+let currentGameMode = 'standard';
+let gameStartTime = 0;
+let isTimerRunning = false;
+
+function startCountdown(mode) {
+    currentGameMode = mode;
+    document.getElementById('start-screen').classList.add('hidden');
+    document.getElementById('game-over').classList.add('hidden');
+
+    // Controlar visibilidade do Timer
+    const timerBox = document.querySelector('.timer-box');
+    if (mode === '40lines') {
+        timerBox.style.display = 'block';
+    } else {
+        timerBox.style.display = 'none';
+    }
+
+    // Reset visual default
+    document.querySelector('#game-over h2').innerText = "GAME OVER";
+    document.querySelector('#game-over p').innerText = "Sua pontuação final:";
+
+    // Reset game state but don't start loop yet
+    resetGameState();
+    playerReset();
+    draw();
+    drawNext();
+    drawHold();
+
+    if (mode === '40lines') {
+        const countdownEl = document.getElementById('countdown');
+        const countdownNum = document.getElementById('countdown-number');
+        countdownEl.classList.remove('hidden');
+
+        let count = 5;
+        countdownNum.innerText = count;
+
+        const timer = setInterval(() => {
+            count--;
+            if (count > 0) {
+                countdownNum.innerText = count;
+            } else {
+                clearInterval(timer);
+                countdownEl.classList.add('hidden');
+                startGame();
+            }
+        }, 1000);
+    } else {
+        startGame();
+    }
+}
+
+function resetGameState() {
+    player.score = 0;
+    player.lines = 0;
+    player.b2bCount = 0;
+    player.lastActionWasRotate = false;
+    player.queue = [];
+    player.bag = [];
+    player.hold = null;
+    arena.forEach(row => row.fill(0));
+    updateScore();
+}
+
+function startGame() {
+    gameRunning = true;
+    lastTime = performance.now();
+    gameStartTime = lastTime;
+    isTimerRunning = (currentGameMode === '40lines');
+    update();
+}
+
 function update(time = 0) {
     if (!gameRunning) return;
 
@@ -388,6 +670,11 @@ function update(time = 0) {
         }
     }
 
+    if (isTimerRunning) {
+        const elapsed = time - gameStartTime;
+        document.getElementById('timer').innerText = formatTime(elapsed);
+    }
+
     draw();
     requestAnimationFrame(update);
 }
@@ -409,6 +696,9 @@ const player = {
     canHold: true,
     score: 0,
     lines: 0,
+    b2bCount: 0,
+    orientation: 0,
+    lastActionWasRotate: false,
     lockActive: false,
     lockCounter: 0
 };
@@ -503,32 +793,18 @@ closeSettings.addEventListener('click', () => settingsModal.classList.add('hidde
 
 let gameRunning = false;
 
-document.getElementById('start-btn').addEventListener('click', () => {
-    document.getElementById('start-screen').classList.add('hidden');
-    gameRunning = true;
-    player.score = 0;
-    player.lines = 0;
-    player.queue = [];
-    player.bag = [];
-    player.hold = null;
-    arena.forEach(row => row.fill(0));
-    updateScore();
-    drawHold();
-    playerReset();
-    update();
+document.getElementById('start-standard-btn').addEventListener('click', () => {
+    startCountdown('standard');
+});
+
+document.getElementById('start-40-btn').addEventListener('click', () => {
+    startCountdown('40lines');
 });
 
 document.getElementById('restart-btn').addEventListener('click', () => {
-    document.getElementById('game-over').classList.add('hidden');
-    player.score = 0;
-    player.lines = 0;
-    player.queue = [];
-    player.bag = [];
-    player.hold = null;
-    arena.forEach(row => row.fill(0));
-    gameRunning = true;
-    updateScore();
-    drawHold();
-    playerReset();
-    update();
+    startCountdown(currentGameMode);
+});
+
+document.getElementById('menu-btn').addEventListener('click', () => {
+    showMenu();
 });

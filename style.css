@@ -92,8 +92,14 @@ header h1 {
 }
 
 .next-box,
-.hold-box {
+.hold-box,
+.timer-box {
     padding: 10px 0 !important;
+}
+
+.timer-box {
+    display: none;
+    /* Escondido por padrão no menu */
 }
 
 .canvas-wrapper {
@@ -182,6 +188,149 @@ button:hover {
     color: var(--text-color);
 }
 
+/* Menu de Modos Premium */
+.glass-overlay {
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+.mode-menu {
+    width: 90%;
+    max-width: 600px;
+}
+
+.menu-title {
+    font-size: 1.2rem !important;
+    letter-spacing: 4px;
+    margin-bottom: 40px !important;
+    opacity: 0.8;
+}
+
+.mode-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.mode-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    margin: 0;
+    height: 100%;
+}
+
+.mode-card:hover {
+    background: rgba(0, 242, 255, 0.05);
+    border-color: var(--accent-color);
+    transform: translateY(-5px);
+}
+
+.mode-icon {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    color: var(--accent-color);
+}
+
+.mode-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #fff;
+}
+
+.mode-desc {
+    font-size: 0.75rem;
+    line-height: 1.4;
+    opacity: 0.5;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+/* Scoreboard Intuitivo */
+#best-times-container {
+    margin: 25px auto;
+    padding: 20px;
+    background: rgba(0, 242, 255, 0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(0, 242, 255, 0.1);
+    max-width: 250px;
+}
+
+#best-times-container h3 {
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    color: var(--accent-color);
+    text-transform: uppercase;
+}
+
+#best-times-list {
+    list-style: none;
+    width: 100%;
+}
+
+#best-times-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 0.95rem;
+    font-family: monospace;
+}
+
+#best-times-list li:last-child {
+    border-bottom: none;
+}
+
+#best-times-list li span:first-child {
+    opacity: 0.4;
+    font-size: 0.8rem;
+}
+
+/* Actions */
+.end-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.end-actions button {
+    margin-top: 0;
+    width: 100%;
+}
+
+@media (max-width: 500px) {
+    .mode-selection {
+        grid-template-columns: 1fr;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 /* Settings Modal */
 .settings-wrapper {
     background: rgba(10, 10, 20, 0.95);
@@ -236,6 +385,67 @@ button:hover {
     }
 
     100% {
+        opacity: 1;
+    }
+}
+
+/* Action Feed */
+.action-feed {
+    margin-top: 20px;
+    height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    pointer-events: none;
+}
+
+#action-text {
+    font-weight: 700;
+    color: var(--accent-color);
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+    margin-bottom: 5px;
+    transition: all 0.2s ease;
+}
+
+.b2b-badge {
+    font-size: 0.7rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 4px 10px;
+    border-radius: 20px;
+    color: #ffd700;
+    /* Gold for B2B */
+    font-weight: 700;
+    letter-spacing: 1px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.b2b-badge.show {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.action-anim {
+    animation: actionPop 0.4s ease-out;
+}
+
+@keyframes actionPop {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+
+    100% {
+        transform: scale(1);
         opacity: 1;
     }
 }

@@ -33,22 +33,51 @@
                     <p id="lines">0</p>
                 </div>
                 <button id="settings-btn" class="secondary-btn">AJUSTES</button>
+                <div id="action-feed" class="action-feed">
+                    <p id="action-text"></p>
+                    <p id="b2b-text" class="b2b-badge"></p>
+                </div>
             </div>
 
             <div class="canvas-wrapper">
                 <canvas id="tetris" width="300" height="600"></canvas>
                 <div id="game-over" class="overlay hidden">
                     <div class="overlay-content">
-                        <h2>GAME OVER</h2>
-                        <p>Sua pontuação final:</p>
+                        <h2 id="end-title">GAME OVER</h2>
+                        <p id="end-label">Sua pontuação final:</p>
                         <p id="final-score">0</p>
-                        <button id="restart-btn">REINICIAR</button>
+
+                        <div id="best-times-container" class="hidden">
+                            <h3>MELHORES TEMPOS</h3>
+                            <ul id="best-times-list"></ul>
+                        </div>
+
+                        <div class="end-actions">
+                            <button id="restart-btn">JOGAR NOVAMENTE</button>
+                            <button id="menu-btn" class="secondary-btn">MENU PRINCIPAL</button>
+                        </div>
                     </div>
                 </div>
-                <div id="start-screen" class="overlay">
+                <div id="start-screen" class="overlay glass-overlay">
+                    <div class="overlay-content mode-menu">
+                        <h2 class="menu-title">ESCOLHA O MODO</h2>
+                        <div class="mode-selection">
+                            <button id="start-standard-btn" class="mode-card">
+                                <span class="mode-icon">∞</span>
+                                <span class="mode-name">PADRÃO</span>
+                                <span class="mode-desc">Jogo infinito com velocidade progressiva</span>
+                            </button>
+                            <button id="start-40-btn" class="mode-card">
+                                <span class="mode-icon">40</span>
+                                <span class="mode-name">40 LINHAS</span>
+                                <span class="mode-desc">Complete 40 linhas o mais rápido possível</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="countdown" class="overlay hidden">
                     <div class="overlay-content">
-                        <h2>ANTIGRAVITY</h2>
-                        <button id="start-btn">JOGAR AGORA</button>
+                        <h1 id="countdown-number">5</h1>
                     </div>
                 </div>
             </div>
@@ -58,7 +87,10 @@
                     <h2>NEXT</h2>
                     <canvas id="next" width="140" height="430"></canvas>
                 </div>
-                <!-- Removido o guia de comandos estático -->
+                <div class="stat-box timer-box">
+                    <h2>TEMPO</h2>
+                    <p id="timer">0:00.00</p>
+                </div>
             </div>
         </div>
 
