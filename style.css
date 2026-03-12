@@ -108,17 +108,19 @@ header h1 {
     border-radius: 8px;
     box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
     overflow: hidden;
-    background: rgba(0, 0, 0, 0.5);
+    background: #000; /* Preto sólido para não mostrar o fundo animado */
 }
 
 #tetris {
     display: block;
+    background: #000;
 }
 
 #next,
 #hold {
     display: block;
     margin: 5px auto;
+    background: #000;
 }
 
 .overlay {
@@ -227,9 +229,21 @@ button:hover {
 }
 
 .mode-card:hover {
-    background: rgba(0, 242, 255, 0.05);
+    background: rgba(0, 242, 255, 0.08);
     border-color: var(--accent-color);
     transform: translateY(-5px);
+    color: #fff;
+}
+
+#bg-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    filter: blur(8px);
+    opacity: 0.3;
 }
 
 .mode-icon {
@@ -339,6 +353,60 @@ button:hover {
     border-radius: 16px;
     width: 90%;
     max-width: 400px;
+}
+
+.volume-settings {
+    margin: 25px 0 10px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 8px;
+}
+
+.volume-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.volume-item label {
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+input[type=range] {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    background: transparent;
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    height: 16px;
+    width: 16px;
+    border-radius: 50%;
+    background: var(--accent-color);
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    margin-top: -6px;
+    box-shadow: 0 0 10px var(--accent-color);
 }
 
 .keybind-list {
@@ -473,4 +541,52 @@ button:hover {
     .sidebar.right {
         order: 3;
     }
+}
+
+/* Exit Prompt */
+.exit-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 0, 0, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.exit-banner {
+    background: #ff0000;
+    color: white;
+    padding: 20px 40px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+    animation: scaleIn 0.2s ease-out;
+}
+
+.exit-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+#exit-progress {
+    width: 0%;
+    height: 100%;
+    background: white;
+    transition: width 0.1s linear;
+}
+
+@keyframes scaleIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }

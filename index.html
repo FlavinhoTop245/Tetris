@@ -12,6 +12,7 @@
 </head>
 
 <body>
+    <canvas id="bg-canvas"></canvas>
     <div class="background-overlay"></div>
     <div class="game-container">
         <header>
@@ -80,6 +81,13 @@
                         <h1 id="countdown-number">5</h1>
                     </div>
                 </div>
+
+                <div id="exit-prompt" class="exit-overlay hidden">
+                    <div class="exit-banner">
+                        CONTINUE SEGURANDO PARA SAIR
+                        <div class="exit-progress-bar"><div id="exit-progress"></div></div>
+                    </div>
+                </div>
             </div>
 
             <div class="sidebar right">
@@ -97,7 +105,7 @@
         <!-- Settings Modal -->
         <div id="settings-modal" class="overlay hidden">
             <div class="overlay-content settings-wrapper">
-                <h2>CONTROLES</h2>
+                <h2 id="settings-title">CONTROLES</h2>
                 <div class="keybind-list">
                     <div class="keybind-item">
                         <label>Esquerda</label>
@@ -127,11 +135,28 @@
                         <label>Segurar Peça</label>
                         <button class="key-config" data-action="hold">C</button>
                     </div>
+                    <div class="keybind-item">
+                        <label>Sair do Jogo</label>
+                        <button class="key-config" data-action="quit">ESC</button>
+                    </div>
                 </div>
+                
+                <div class="volume-settings">
+                    <div class="volume-item">
+                        <label>Volume Música</label>
+                        <input type="range" id="music-volume" min="0" max="1" step="0.05" value="0.3">
+                    </div>
+                    <div class="volume-item">
+                        <label>Volume Efeitos</label>
+                        <input type="range" id="sfx-volume" min="0" max="1" step="0.05" value="0.5">
+                    </div>
+                </div>
+
                 <button id="close-settings">VOLTAR</button>
             </div>
         </div>
     </div>
+    <script src="background.js"></script>
     <script src="game.js"></script>
 </body>
 

@@ -7,7 +7,98 @@ const holdContext = holdCanvas.getContext('2d');
 
 context.scale(30, 30);
 nextContext.scale(30, 30);
-holdContext.scale(30, 30);
+holdContext.scale(30,30);
+
+// --- AUDIO SYSTEM ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let currentMusic = null;
+let musicVolume = 0.3;
+let sfxVolume = 0.5;
+
+function playSynthSound(freq, type, duration, volume) {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    
+    gain.gain.setValueAtTime(volume * sfxVolume, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+    
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+}
+
+function playLockSound() {
+    playSynthSound(100, 'sine', 0.15, 0.1);
+}
+
+function playLineSound(lines, b2b) {
+    const baseFreq = 440 + (lines * 40) + (b2b * 20);
+    const multiplier = 1.25;
+    playSynthSound(baseFreq, 'sine', 0.4, 0.15);
+    setTimeout(() => playSynthSound(baseFreq * multiplier, 'sine', 0.4, 0.1), 100);
+}
+
+function stopMusic() {
+    if (currentMusic) {
+        // Fade out mais lento e suave
+        const fadeInterval = 50; 
+        const fadeStep = 0.01;
+        const fadeOut = setInterval(() => {
+            if (currentMusic.volume > fadeStep) {
+                currentMusic.volume -= fadeStep;
+            } else {
+                clearInterval(fadeOut);
+                currentMusic.pause();
+                currentMusic.currentTime = 0;
+            }
+        }, fadeInterval);
+    }
+}
+
+const playlists = {
+    standard: ['audio/musicacalma1.mp3', 'audio/musicacalma2.mp3', 'audio/musicacalma3.mp3'],
+    '40lines': ['audio/musicaanimada1.mp3', 'audio/musicaanimada2.mp3']
+};
+
+function playMusic(mode) {
+    if (currentMusic) {
+        currentMusic.pause();
+        currentMusic.currentTime = 0;
+    }
+    
+    const playlist = playlists[mode === '40lines' ? '40lines' : 'standard'];
+    const randomTrack = playlist[Math.floor(Math.random() * playlist.length)];
+
+    currentMusic = new Audio(randomTrack);
+    currentMusic.loop = false;
+    currentMusic.volume = 0; 
+    
+    currentMusic.addEventListener('ended', () => playMusic(mode));
+
+    currentMusic.play()
+        .then(() => {
+            // Fade in MUITO mais lento e perceptível
+            const fadeInterval = 150;
+            const fadeStep = 0.005;
+            const fadeIn = setInterval(() => {
+                if (currentMusic.volume < musicVolume - fadeStep) {
+                    currentMusic.volume += fadeStep;
+                } else {
+                    currentMusic.volume = musicVolume;
+                    clearInterval(fadeIn);
+                }
+            }, fadeInterval);
+        })
+        .catch(e => console.log("Áudio aguardando interação."));
+}
+// --------------------
 
 function arenaSweep() {
     let linesClearedThisTurn = 0;
@@ -27,8 +118,9 @@ function arenaSweep() {
     if (linesClearedThisTurn > 0) {
         if (currentGameMode === 'standard') {
             calculateStandardScore(linesClearedThisTurn);
+            playLineSound(linesClearedThisTurn, player.b2bCount); // Som dinâmico
         } else {
-            // Modo 40 linhas: pontuação simples do jogo original ou apenas manter contagem
+            playLineSound(linesClearedThisTurn, 0); // Modo 40 linhas sem b2b complexo
             player.score += linesClearedThisTurn * 10;
         }
         player.lines += linesClearedThisTurn;
@@ -239,7 +331,7 @@ const colors = [
 ];
 
 function draw() {
-    context.fillStyle = '#000';
+    context.fillStyle = '#000'; // Fundo preto sólido e opaco
     context.fillRect(0, 0, canvas.width, canvas.height);
 
     drawMatrix(arena, { x: 0, y: 0 }, context);
@@ -260,8 +352,7 @@ function getGhostPos() {
 }
 
 function drawNext() {
-    nextContext.clearRect(0, 0, nextCanvas.width, nextCanvas.height);
-    nextContext.fillStyle = '#000';
+    nextContext.fillStyle = '#000'; // Fundo preto sólido e opaco
     nextContext.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
 
     player.queue.forEach((matrix, index) => {
@@ -272,8 +363,7 @@ function drawNext() {
 }
 
 function drawHold() {
-    holdContext.clearRect(0, 0, holdCanvas.width, holdCanvas.height);
-    holdContext.fillStyle = '#000';
+    holdContext.fillStyle = '#000'; // Fundo preto sólido e opaco
     holdContext.fillRect(0, 0, holdCanvas.width, holdCanvas.height);
 
     if (player.hold) {
@@ -343,6 +433,7 @@ function playerHardDrop() {
 }
 
 function lockPiece() {
+    playLockSound(); // Som ao encaixar!
     merge(arena, player);
     playerReset();
     arenaSweep();
@@ -503,6 +594,7 @@ function updateBestTimesDisplay() {
 updateBestTimesDisplay();
 
 function showMenu() {
+    stopMusic();
     gameRunning = false;
     isTimerRunning = false;
     document.getElementById('game-over').classList.add('hidden');
@@ -562,6 +654,9 @@ const LOCK_DELAY = 500;
 
 let lastTime = 0;
 
+let exitHoldTimer = 0;
+const EXIT_HOLD_DURATION = 1500; // 1.5 segundos segurando ESC
+
 let moveState = {
     dir: 0,
     timer: 0,
@@ -613,10 +708,12 @@ function startCountdown(mode) {
             } else {
                 clearInterval(timer);
                 countdownEl.classList.add('hidden');
+                playMusic(currentGameMode);
                 startGame();
             }
         }, 1000);
     } else {
+        playMusic(currentGameMode);
         startGame();
     }
 }
@@ -670,6 +767,27 @@ function update(time = 0) {
         }
     }
 
+    // Lógica de Segurar para Sair (ESC)
+    const exitPrompt = document.getElementById('exit-prompt');
+    const exitBar = document.getElementById('exit-progress');
+    
+    if (exitHoldActive && gameRunning) {
+        exitHoldTimer += deltaTime;
+        exitPrompt.classList.remove('hidden');
+        const progress = Math.min((exitHoldTimer / EXIT_HOLD_DURATION) * 100, 100);
+        exitBar.style.width = progress + '%';
+        
+        if (exitHoldTimer >= EXIT_HOLD_DURATION) {
+            exitHoldActive = false;
+            exitHoldTimer = 0;
+            exitPrompt.classList.add('hidden');
+            showMenu();
+        }
+    } else {
+        exitHoldTimer = 0;
+        exitPrompt.classList.add('hidden');
+    }
+
     if (isTimerRunning) {
         const elapsed = time - gameStartTime;
         document.getElementById('timer').innerText = formatTime(elapsed);
@@ -710,8 +828,11 @@ let keyMap = {
     rotateCCW: 'z',
     drop: 'ArrowDown',
     hardDrop: ' ',
-    hold: 'c'
+    hold: 'c',
+    quit: 'Escape'
 };
+
+let exitHoldActive = false;
 
 if (localStorage.getItem('tetrisKeys')) {
     const savedKeys = JSON.parse(localStorage.getItem('tetrisKeys'));
@@ -773,15 +894,30 @@ document.addEventListener('keydown', e => {
         playerHardDrop();
     } else if (e.key === keyMap.hold) {
         playerHold();
+    } else if (e.key === keyMap.quit) {
+        exitHoldActive = true;
     }
 });
 
 document.addEventListener('keyup', e => {
+    if (e.key === keyMap.quit) {
+        exitHoldActive = false;
+    }
     if (e.key === keyMap.moveLeft && moveState.dir === -1) {
         moveState.dir = 0;
     } else if (e.key === keyMap.moveRight && moveState.dir === 1) {
         moveState.dir = 0;
     }
+});
+
+// Controle de Volume
+document.getElementById('music-volume').addEventListener('input', (e) => {
+    musicVolume = parseFloat(e.target.value);
+    if (currentMusic) currentMusic.volume = musicVolume;
+});
+
+document.getElementById('sfx-volume').addEventListener('input', (e) => {
+    sfxVolume = parseFloat(e.target.value);
 });
 
 const settingsBtn = document.getElementById('settings-btn');
@@ -808,3 +944,30 @@ document.getElementById('restart-btn').addEventListener('click', () => {
 document.getElementById('menu-btn').addEventListener('click', () => {
     showMenu();
 });
+
+// Inicialização: Mostrar Ajustes no Primeiro Login
+function initOnboarding() {
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsTitle = document.getElementById('settings-title');
+    const startScreen = document.getElementById('start-screen');
+    
+    // Esconde o menu principal temporariamente
+    startScreen.classList.add('hidden');
+    
+    // Configura o modal de ajustes como tela de boas-vindas
+    settingsTitle.innerText = "CONFIGURE O SEU JOGO";
+    settingsModal.classList.remove('hidden');
+    
+    // Quando fechar os ajustes, volta para o título padrão e mostra o menu
+    const originalClose = document.getElementById('close-settings');
+    const newClose = () => {
+        settingsModal.classList.add('hidden');
+        settingsTitle.innerText = "CONTROLES";
+        startScreen.classList.remove('hidden');
+        originalClose.removeEventListener('click', newClose);
+    };
+    originalClose.addEventListener('click', newClose);
+}
+
+// Pequeno delay para garantir que o DOM está pronto e o usuário veja a transição
+setTimeout(initOnboarding, 500);
