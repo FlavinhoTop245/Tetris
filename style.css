@@ -241,9 +241,19 @@ button:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -2;
-    filter: blur(8px);
-    opacity: 0.3;
+    z-index: -1; /* À frente do overlay, mas atrás do conteúdo */
+    filter: blur(4px); /* Menos embaçado para ser visível */
+    opacity: 0.6; /* Mais opaco para ser perceptível */
+}
+
+.background-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, #101020 0%, #050505 100%);
+    z-index: -2; /* Agora é o fundo mais profundo */
 }
 
 .mode-icon {
